@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import type { SelectedSeat } from '../store/slices/bookingSlice';
 
 interface Seat {
   id: number;
@@ -13,7 +14,7 @@ interface HallLayoutProps {
   totalRows: number;
   seatsPerRow: number;
   onSeatSelect: (seat: Seat) => void;
-  selectedSeats: Seat[];
+  selectedSeats: SelectedSeat[];
   availableSeats?: { id: number; row: number; column: number; seat_type: 'standard' | 'vip' | 'premium'; price_multiplier: number }[];
   basePrice?: number;
 }
@@ -86,7 +87,10 @@ export function HallLayout({ totalRows, seatsPerRow, onSeatSelect, selectedSeats
         : s
     ));
     
-    onSeatSelect({ ...seat, status: newStatus });
+    onSeatSelect({ 
+      ...seat, 
+      status: newStatus
+    } as any);
   };
 
   const getSeatColor = (seat: Seat) => {
@@ -107,7 +111,7 @@ export function HallLayout({ totalRows, seatsPerRow, onSeatSelect, selectedSeats
     }
   };
 
-  const totalPrice = selectedSeats.reduce((sum, seat) => sum + seat.price, 0);
+  const totalPrice = selectedSeats.reduce((sum, seat) => sum + (seat.price || 0), 0);
 
   return (
     <div className="bg-gray-900 rounded-xl p-6">

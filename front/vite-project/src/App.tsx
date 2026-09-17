@@ -14,17 +14,20 @@ import {
 } from './store/slices/bookingSlice'
 import { setUser, updateUser } from './store/slices/userSlice'
 import type { RootState } from './store'
+import type { SelectedSeat } from './store/slices/bookingSlice'
 import { MovieCard } from './components/MovieCard'
 import { SessionCard } from './components/SessionCard'
 import { HallLayout } from './components/HallLayout'
 import { BookingForm } from './components/BookingForm'
 import { MyTickets } from './components/MyTickets'
+import { MovieWheel } from './components/MovieWheel'
 
 type View = 'movies' | 'sessions' | 'hall' | 'booking' | 'success' | 'tickets'
 
 function App() {
   const dispatch = useDispatch()
   const [currentView, setCurrentView] = useState<View>('movies')
+  const [showWheel, setShowWheel] = useState(false)
   
   const selectedMovieId = useSelector((state: RootState) => state.booking.selectedMovieId)
   const selectedSessionId = useSelector((state: RootState) => state.booking.selectedSessionId)
@@ -63,11 +66,19 @@ function App() {
   }
 
   const handleSeatSelect = (seat: any) => {
-    const exists = selectedSeats.some((s: any) => s.row === seat.row && s.column === seat.column)
+    const exists = selectedSeats.some((s: SelectedSeat) => s.row === seat.row && s.column === seat.column)
     if (exists) {
       dispatch(deselectSeat({ row: seat.row, column: seat.column }))
     } else {
-      dispatch(selectSeat(seat))
+      dispatch(selectSeat({
+        id: seat.id,
+        row: seat.row,
+        column: seat.column,
+        seat_type: seat.type,
+        type: seat.type,
+        price: seat.price,
+        status: seat.status
+      }))
     }
   }
 
@@ -75,7 +86,7 @@ function App() {
     dispatch(setUser(data))
     
     // Create bookings for each selected seat
-    selectedSeats.forEach((seat: any) => {
+    selectedSeats.forEach((seat: SelectedSeat) => {
       if (selectedSessionId) {
         createBooking({
           session: selectedSessionId,
@@ -96,9 +107,14 @@ function App() {
     setCurrentView('movies')
   }
 
+  const handleWheelMovieSelect = (movieId: number) => {
+    dispatch(setSelectedMovie(movieId))
+    setCurrentView('sessions')
+  }
+
   const selectedMovie = movies?.find(m => m.id === selectedMovieId)
   const selectedSession = sessions?.find(s => s.id === selectedSessionId)
-  const totalPrice = selectedSeats.reduce((sum: number, seat: any) => sum + seat.price, 0)
+  const totalPrice = selectedSeats.reduce((sum: number, seat: SelectedSeat) => sum + seat.price, 0)
 
   if (moviesLoading) {
     return (
@@ -115,6 +131,7 @@ function App() {
           <h1 
             className="text-2xl font-bold text-purple-400 cursor-pointer"
             onClick={handleBackToMovies}
+            onDoubleClick={() => setShowWheel(true)}
           >
             🎬 КиноТеатр
           </h1>
@@ -265,6 +282,14 @@ function App() {
           </div>
         )}
       </main>
+
+      {showWheel && movies && (
+        <MovieWheel
+          movies={movies}
+          onMovieSelect={handleWheelMovieSelect}
+          onClose={() => setShowWheel(false)}
+        />
+      )}
     </div>
   )
 }

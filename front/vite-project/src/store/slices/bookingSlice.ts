@@ -1,11 +1,13 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-interface SelectedSeat {
+export interface SelectedSeat {
   id: number;
   row: number;
   column: number;
-  seat_type: 'standard' | 'vip' | 'premium';
+  seat_type?: 'standard' | 'vip' | 'premium';
+  type?: 'standard' | 'vip' | 'premium';
   price: number;
+  status?: 'available' | 'booked' | 'selected';
 }
 
 interface BookingState {
@@ -33,7 +35,16 @@ const bookingSlice = createSlice({
         seat => seat.row === action.payload.row && seat.column === action.payload.column
       );
       if (!exists) {
-        state.selectedSeats.push(action.payload);
+        const normalized: SelectedSeat = {
+          id: action.payload.id,
+          row: action.payload.row,
+          column: action.payload.column,
+          seat_type: action.payload.seat_type || action.payload.type,
+          type: action.payload.type || action.payload.seat_type,
+          price: action.payload.price,
+          status: action.payload.status
+        };
+        state.selectedSeats.push(normalized);
       }
     },
     deselectSeat: (state, action: PayloadAction<{ row: number; column: number }>) => {

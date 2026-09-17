@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import type { SelectedSeat } from '../store/slices/bookingSlice';
 
 interface BookingFormProps {
-  selectedSeats: any[];
+  selectedSeats: SelectedSeat[];
   totalPrice: number;
   onSubmit: (data: { name: string; email: string; city: string }) => void;
   onCancel: () => void;
