@@ -22,25 +22,18 @@ export function MovieWheel({ movies, onMovieSelect, onClose }: MovieWheelProps) 
 
   const handleSpin = () => {
     if (isSpinning || movies.length === 0) return
-    
     setIsSpinning(true)
     setSelectedMovie(null)
-    
-    // Random rotation (at least 5 full spins + random segment)
     const segmentAngle = 360 / movies.length
     const randomSegment = Math.floor(Math.random() * movies.length)
     const extraSpins = 5 + Math.random() * 3 // 5-8 full spins
     const newRotation = rotation + (extraSpins * 360) + (randomSegment * segmentAngle)
     
     setRotation(newRotation)
-    
-    // Determine winner after spin
     setTimeout(() => {
-      // Calculate which segment is under the pointer (top position)
-      // When wheel rotates clockwise, the pointer points to segment at (360 - rotation % 360)
       const normalizedRotation = newRotation % 360
-      const pointerAngle = (360 - normalizedRotation) % 360
-      const winnerIndex = Math.floor(pointerAngle / segmentAngle) % movies.length
+      const pointerPosition = (270 - normalizedRotation + 360) % 360
+      const winnerIndex = Math.floor((pointerPosition + segmentAngle / 2) / segmentAngle) % movies.length
       const actualWinner = movies[winnerIndex]
       setSelectedMovie(actualWinner)
       setIsSpinning(false)
@@ -55,8 +48,6 @@ export function MovieWheel({ movies, onMovieSelect, onClose }: MovieWheelProps) 
   }
 
   const segmentAngle = 360 / movies.length
-
-  // Generate colors for segments
   const colors = [
     '#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B', 
     '#EF4444', '#6366F1', '#14B8A6', '#F97316', '#84CC16'
@@ -80,14 +71,11 @@ export function MovieWheel({ movies, onMovieSelect, onClose }: MovieWheelProps) 
         </p>
 
         <div className="flex flex-col items-center">
-          {/* Wheel Container */}
           <div className="relative mb-8">
-            {/* Pointer */}
             <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-10">
               <div className="w-0 h-0 border-l-[15px] border-r-[15px] border-t-[25px] border-l-transparent border-r-transparent border-t-yellow-400 drop-shadow-lg" />
             </div>
-            
-            {/* Wheel */}
+
             <div 
               className="w-72 h-72 md:w-96 md:h-96 rounded-full relative shadow-2xl transition-transform duration-[4000ms] ease-out"
               style={{
@@ -113,36 +101,45 @@ export function MovieWheel({ movies, onMovieSelect, onClose }: MovieWheelProps) 
                         transform: `rotate(${segmentAngle / 2}deg)`,
                       }}
                     >
+                      <defs>
+                        <clipPath id={`clip-${index}`}>
+                          <path
+                            d={`M 50 50 L 50 0 A 50 50 0 0 1 ${50 + 50 * Math.sin((segmentAngle * Math.PI) / 180)} ${50 - 50 * Math.cos((segmentAngle * Math.PI) / 180)} Z`}
+                          />
+                        </clipPath>
+                      </defs>
                       <path
                         d={`M 50 50 L 50 0 A 50 50 0 0 1 ${50 + 50 * Math.sin((segmentAngle * Math.PI) / 180)} ${50 - 50 * Math.cos((segmentAngle * Math.PI) / 180)} Z`}
                         fill={color}
                         stroke="#1F2937"
                         strokeWidth="0.5"
                       />
-                      <text
-                        x="70"
-                        y="30"
-                        fontSize="8"
-                        fill="white"
-                        textAnchor="middle"
-                        transform={`rotate(${segmentAngle / 2} 70 30)`}
-                        className="font-semibold"
+                      <foreignObject
+                        x="55"
+                        y="10"
+                        width="30"
+                        height="40"
+                        clipPath={`url(#clip-${index})`}
                       >
-                        {movie.title.length > 15 ? movie.title.slice(0, 15) + '...' : movie.title}
-                      </text>
+                        <img
+                          src={movie.poster_url}
+                          alt={movie.title}
+                          className="w-full h-full object-cover"
+                          style={{
+                            transform: `rotate(${-startAngle - segmentAngle / 2}deg)`,
+                            transformOrigin: 'center center'
+                          }}
+                        />
+                      </foreignObject>
                     </svg>
                   </div>
                 )
               })}
-              
-              {/* Center circle */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-gray-900 rounded-full border-4 border-purple-500 flex items-center justify-center">
                 <span className="text-2xl">🎬</span>
               </div>
             </div>
           </div>
-
-          {/* Spin Button */}
           <button
             onClick={handleSpin}
             disabled={isSpinning}
@@ -150,8 +147,6 @@ export function MovieWheel({ movies, onMovieSelect, onClose }: MovieWheelProps) 
           >
             {isSpinning ? '🎰 Крутим...' : '🎲 Крутить колесо!'}
           </button>
-
-          {/* Selected Movie */}
           {selectedMovie && !isSpinning && (
             <div className="mt-8 bg-gray-800 rounded-xl p-6 w-full max-w-md animate-fade-in">
               <h3 className="text-xl font-bold text-green-400 mb-4 text-center">
